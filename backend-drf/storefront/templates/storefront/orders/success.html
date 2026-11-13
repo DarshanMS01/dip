@@ -1,0 +1,104 @@
+{% extends "storefront/base.html" %}
+
+{% block title %}Order {{ order.order_number }} confirmed — {{ store_name }}{% endblock %}
+
+{% block content %}
+<div class="container success-wrap">
+    <div class="success-hero">
+        <span class="success-check" aria-hidden="true">✓</span>
+        <span class="eyebrow">Order received</span>
+        <h1>Thank you, {{ order.full_name|default:"friend" }}!</h1>
+        <p>Your order has been placed successfully. We’ve sent the confirmation to <strong>{{ order.email }}</strong>.</p>
+        <div class="order-number-box">
+            <span>Order number</span>
+            <strong id="orderNumber">{{ order.order_number }}</strong>
+            <button type="button" class="copy-btn" data-copy-target="orderNumber">Copy</button>
+        </div>
+    </div>
+
+    <div class="tracking-card">
+        <div class="tracking-head">
+            <div>
+                <h2>Order status</h2>
+                <p class="muted">Estimated delivery in 3–5 business days.</p>
+            </div>
+            <span class="status-badge status-{{ order.status|lower }}">{{ order.get_status_display }}</span>
+        </div>
+        <div class="status-timeline">
+            <div class="timeline-step {% if order.status_index >= 0 %}is-complete{% endif %} {% if order.status == 'PENDING' %}is-current{% endif %}">
+                <span class="timeline-dot"></span>
+                <strong>Pending</strong><small>Order placed</small>
+            </div>
+            <div class="timeline-step {% if order.status_index >= 1 %}is-complete{% endif %} {% if order.status == 'CONFIRMED' %}is-current{% endif %}">
+                <span class="timeline-dot"></span>
+                <strong>Confirmed</strong><small>Packed &amp; ready</small>
+            </div>
+            <div class="timeline-step {% if order.status_index >= 2 %}is-complete{% endif %} {% if order.status == 'SHIPPED' %}is-current{% endif %}">
+                <span class="timeline-dot"></span>
+                <strong>Shipped</strong><small>On the way</small>
+            </div>
+            <div class="timeline-step {% if order.status_index >= 3 %}is-complete{% endif %} {% if order.status == 'DELIVERED' %}is-current{% endif %}">
+                <span class="timeline-dot"></span>
+                <strong>Delivered</strong><small>At your door</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="success-grid">
+        <section class="panel">
+            <h2>Items in this order</h2>
+            <div class="order-items">
+                {% for item in order.items.all %}
+                    <div class="order-item">
+                        <div class="order-item-media">
+                            <div class="product-placeholder" aria-hidden="true"><span>{{ item.product.category.icon|default:"🛍️" }}</span></div>
+                            {% if item.product.image %}<img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" data-product-image>{% endif %}
+                        </div>
+                        <div class="order-item-info">
+                            <strong>{{ item.product.name }}</strong>
+                            <span class="muted">Qty {{ item.quantity }} × ₹{{ item.price|floatformat:0 }}</span>
+                        </div>
+                        <strong>₹{{ item.total_price|floatformat:0 }}</strong>
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="summary-lines compact">
+                <div><span>Subtotal</span><strong>₹{{ order.subtotal|floatformat:0 }}</strong></div>
+                <div><span>Delivery</span><strong>{% if order.delivery_charge %}₹{{ order.delivery_charge|floatformat:0 }}{% else %}<span class="success-text">FREE</span>{% endif %}</strong></div>
+                <div class="grand"><span>Total</span><strong>₹{{ order.grand_total|floatformat:0 }}</strong></div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>Delivery &amp; payment</h2>
+            <div class="info-block">
+                <h3>Shipping to</h3>
+                <p><strong>{{ order.full_name }}</strong><br>
+                {{ order.address }}<br>
+                {{ order.city }}, {{ order.state }} — {{ order.zip_code }}<br>
+                📞 {{ order.phone }}</p>
+            </div>
+            <div class="info-block">
+                <h3>Payment</h3>
+                <p>{{ order.get_payment_method_display }}<br>
+                <span class="status-badge status-{{ order.payment_status|lower }}">{{ order.get_payment_status_display }}</span></p>
+                {% if order.payment_method == "ONLINE" and order.payment_status != "PAID" and razorpay_enabled %}
+                    <a class="btn btn-primary btn-sm" href="{% url 'storefront:payment' order.order_number %}">Complete payment</a>
+                {% endif %}
+            </div>
+            {% if order.notes %}
+                <div class="info-block"><h3>Delivery notes</h3><p>{{ order.notes }}</p></div>
+            {% endif %}
+        </section>
+    </div>
+
+    <div class="success-actions">
+        <a class="btn btn-primary" href="{% url 'storefront:product_list' %}">Continue shopping</a>
+        {% if user.is_authenticated %}
+            <a class="btn btn-outline" href="{% url 'storefront:order_history' %}">View my orders</a>
+        {% else %}
+            <a class="btn btn-outline" href="{% url 'storefront:register' %}">Create an account to track orders</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

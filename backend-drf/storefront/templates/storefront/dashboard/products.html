@@ -1,0 +1,92 @@
+{% extends "storefront/dashboard/base.html" %}
+
+{% block title %}Products — {{ store_name }} admin{% endblock %}
+
+{% block dashboard_content %}
+<div class="dashboard-head">
+    <div>
+        <span class="eyebrow">Catalog</span>
+        <h1>Products</h1>
+        <p class="muted">Add products, update prices and keep stock accurate.</p>
+    </div>
+    <div class="dashboard-head-actions">
+        <a class="btn btn-primary" href="{% url 'storefront:dashboard_product_create' %}">+ Add product</a>
+    </div>
+</div>
+
+<form class="dashboard-filters" method="get">
+    <div class="search-field">
+        <input type="search" name="q" value="{{ query }}" placeholder="Search product, brand or category">
+        <button type="submit" aria-label="Search">→</button>
+    </div>
+    <select name="category" class="form-input form-select js-auto-submit">
+        <option value="">All categories</option>
+        {% for category in categories %}
+            <option value="{{ category.slug }}" {% if category_slug == category.slug %}selected{% endif %}>{{ category.name }}</option>
+        {% endfor %}
+    </select>
+    <select name="stock" class="form-input form-select js-auto-submit">
+        <option value="">All stock levels</option>
+        <option value="low" {% if stock_filter == "low" %}selected{% endif %}>Low stock (≤ 5)</option>
+        <option value="out" {% if stock_filter == "out" %}selected{% endif %}>Out of stock</option>
+    </select>
+    <button type="submit" class="btn btn-soft">Filter</button>
+    {% if query or category_slug or stock_filter %}<a class="link-button small" href="{% url 'storefront:dashboard_products' %}">Reset</a>{% endif %}
+</form>
+
+<div class="panel">
+    <div class="table-wrap">
+        <table class="data-table product-table">
+            <thead>
+                <tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th class="align-right">Actions</th></tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                    <tr>
+                        <td>
+                            <div class="table-product">
+                                <div class="table-thumb">
+                                    <div class="product-placeholder" aria-hidden="true"><span>{{ product.category.icon|default:"🛍️" }}</span></div>
+                                    {% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.name }}" data-product-image>{% endif %}
+                                </div>
+                                <div>
+                                    <strong>{{ product.name }}</strong>
+                                    <small class="muted">{{ product.brand|default:"No brand" }} · ID CM-{{ product.pk|stringformat:"05d" }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ product.category.name|default:"—" }}</td>
+                        <td>
+                            <strong>₹{{ product.price|floatformat:0 }}</strong>
+                            {% if product.mrp %}<br><small class="muted"><s>₹{{ product.mrp|floatformat:0 }}</s></small>{% endif %}
+                        </td>
+                        <td>
+                            <span class="stock-pill {% if product.stock == 0 %}danger{% elif product.stock <= 5 %}warning{% endif %}">{{ product.stock }} units</span>
+                        </td>
+                        <td>
+                            <span class="status-badge {% if product.is_active %}status-delivered{% else %}status-pending{% endif %}">
+                                {% if product.is_active %}Active{% else %}Hidden{% endif %}
+                            </span>
+                        </td>
+                        <td class="align-right">
+                            <div class="table-actions">
+                                <a class="link-button small" href="{% url 'storefront:dashboard_product_edit' product.pk %}">Edit</a>
+                                <form method="post" action="{% url 'storefront:dashboard_product_toggle' product.pk %}">
+                                    {% csrf_token %}
+                                    <button class="link-button small" type="submit">{% if product.is_active %}Hide{% else %}Show{% endif %}</button>
+                                </form>
+                                <form method="post" action="{% url 'storefront:dashboard_product_delete' product.pk %}">
+                                    {% csrf_token %}
+                                    <button class="link-button small danger" type="submit" data-confirm="Delete {{ product.name }}? Products with order history are archived instead.">Delete</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="6"><div class="empty-state compact"><span class="empty-icon">🏷️</span><h3>No products found</h3><p>Add your first product to start selling.</p><a class="btn btn-primary btn-sm" href="{% url 'storefront:dashboard_product_create' %}">Add product</a></div></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

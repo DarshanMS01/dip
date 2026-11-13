@@ -1,0 +1,64 @@
+{% extends "storefront/base.html" %}
+
+{% block title %}Complete payment — {{ store_name }}{% endblock %}
+
+{% block content %}
+<div class="container payment-wrap">
+    <div class="payment-card">
+        <span class="eyebrow">Secure payment</span>
+        <h1>Complete your payment</h1>
+        <p class="muted">Order <strong>{{ order.order_number }}</strong> is reserved for you. Pay securely with Razorpay.</p>
+
+        <div class="payment-amount">
+            <span>Amount payable</span>
+            <strong>₹{{ order.grand_total|floatformat:2 }}</strong>
+        </div>
+
+        <button type="button" class="btn btn-primary btn-lg btn-block" id="payButton">Pay now with Razorpay</button>
+        <p class="secure-note">🔒 Payments are processed by Razorpay. ClickMart never stores your card details.</p>
+        <a class="link-button small" href="{% url 'storefront:order_success' order.order_number %}">Pay later / view order</a>
+    </div>
+</div>
+
+<form method="post" action="{% url 'storefront:payment_callback' %}" id="razorpayCallback" hidden>
+    {% csrf_token %}
+    <input type="hidden" name="order_number" value="{{ order.order_number }}">
+    <input type="hidden" name="razorpay_order_id" id="rzpOrderId">
+    <input type="hidden" name="razorpay_payment_id" id="rzpPaymentId">
+    <input type="hidden" name="razorpay_signature" id="rzpSignature">
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+    (function () {
+        var payButton = document.getElementById("payButton");
+        var callbackForm = document.getElementById("razorpayCallback");
+        if (!payButton || typeof Razorpay === "undefined") return;
+
+        var options = {
+            key: "{{ razorpay_key_id }}",
+            amount: Math.round(parseFloat("{{ order.grand_total|floatformat:2 }}") * 100),
+            currency: "INR",
+            name: "{{ store_name }}",
+            description: "Order {{ order.order_number }}",
+            order_id: "{{ order.razorpay_order_id }}",
+            prefill: {
+                name: "{{ order.full_name|escapejs }}",
+                email: "{{ order.email|escapejs }}",
+                contact: "{{ order.phone|escapejs }}"
+            },
+            theme: { color: "#0f172a" },
+            handler: function (response) {
+                document.getElementById("rzpOrderId").value = response.razorpay_order_id;
+                document.getElementById("rzpPaymentId").value = response.razorpay_payment_id;
+                document.getElementById("rzpSignature").value = response.razorpay_signature;
+                callbackForm.submit();
+            }
+        };
+        var razorpay = new Razorpay(options);
+        payButton.addEventListener("click", function () { razorpay.open(); });
+    })();
+</script>
+{% endblock %}

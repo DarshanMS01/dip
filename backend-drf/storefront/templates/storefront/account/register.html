@@ -1,0 +1,77 @@
+{% extends "storefront/base.html" %}
+
+{% block title %}Create your account — {{ store_name }}{% endblock %}
+
+{% block content %}
+<div class="container auth-wrap">
+    <section class="auth-card">
+        <div class="auth-copy">
+            <span class="eyebrow">Join {{ store_name }}</span>
+            <h1>Create your account</h1>
+            <p>Save your cart, track orders and check out in seconds.</p>
+        </div>
+
+        <form method="post" action="{% url 'storefront:register' %}" class="auth-form" novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.GET.next|default:'' }}">
+
+            {% if form.non_field_errors %}
+                <div class="form-alert">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <div class="form-grid">
+                <div class="field">
+                    <label for="{{ form.first_name.id_for_label }}">First name</label>
+                    {{ form.first_name }}
+                    {% for error in form.first_name.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+                </div>
+                <div class="field">
+                    <label for="{{ form.last_name.id_for_label }}">Last name</label>
+                    {{ form.last_name }}
+                    {% for error in form.last_name.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+                </div>
+                <div class="field field-full">
+                    <label for="{{ form.email.id_for_label }}">Email address</label>
+                    {{ form.email }}
+                    {% for error in form.email.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+                </div>
+                <div class="field field-full">
+                    <label for="{{ form.phone.id_for_label }}">Mobile number <span class="optional">(optional)</span></label>
+                    {{ form.phone }}
+                    {% for error in form.phone.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+                </div>
+                <div class="field">
+                    <label for="{{ form.password1.id_for_label }}">Password</label>
+                    {{ form.password1 }}
+                    {% for error in form.password1.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+                </div>
+                <div class="field">
+                    <label for="{{ form.password2.id_for_label }}">Confirm password</label>
+                    {{ form.password2 }}
+                    {% for error in form.password2.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg btn-block">Create account</button>
+            <p class="auth-switch">Already have an account? <a href="{% url 'storefront:login' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}">Sign in</a></p>
+        </form>
+    </section>
+
+    <aside class="auth-aside">
+        <div class="auth-aside-card">
+            <span class="benefit-icon">✨</span>
+            <h2>Why create an account?</h2>
+            <ul>
+                <li>Your cart is saved for next time</li>
+                <li>Live order tracking and history</li>
+                <li>Address pre-filled at checkout</li>
+                <li>Exclusive member-only offers</li>
+            </ul>
+        </div>
+        <div class="auth-quote">
+            <p>“Creating an account took less than a minute and checkout was effortless.”</p>
+            <span>— Priya, Bengaluru</span>
+        </div>
+    </aside>
+</div>
+{% endblock %}

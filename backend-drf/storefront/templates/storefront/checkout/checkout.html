@@ -1,0 +1,178 @@
+{% extends "storefront/base.html" %}
+
+{% block title %}Checkout — {{ store_name }}{% endblock %}
+
+{% block content %}
+<div class="container page-head">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="{% url 'storefront:home' %}">Home</a><span>/</span>
+        <a href="{% url 'storefront:cart' %}">Cart</a><span>/</span><span>Checkout</span>
+    </nav>
+    <h1>Secure checkout</h1>
+    <p class="muted">Enter your delivery details and choose how you’d like to pay.</p>
+</div>
+
+<div class="container checkout-layout">
+    <form method="post" action="{% url 'storefront:place_order' %}" class="checkout-form" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="mode" value="{{ mode }}">
+
+        {% if form.non_field_errors %}
+            <div class="form-alert">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <section class="checkout-card">
+            <div class="card-heading">
+                <span class="step-number">1</span>
+                <div><h2>Contact details</h2><p>We’ll send your order confirmation here.</p></div>
+            </div>
+            <div class="form-grid">
+                <div class="field">
+                    <label for="{{ form.full_name.id_for_label }}">Full name</label>
+                    {{ form.full_name }}
+                    {% for error in form.full_name.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+                </div>
+                <div class="field">
+                    <label for="{{ form.email.id_for_label }}">Email address</label>
+                    {{ form.email }}
+                    {% for error in form.email.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+                </div>
+                <div class="field">
+                    <label for="{{ form.phone.id_for_label }}">Mobile number</label>
+                    {{ form.phone }}
+                    {% for error in form.phone.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <section class="checkout-card">
+            <div class="card-heading">
+                <span class="step-number">2</span>
+                <div><h2>Delivery address</h2><p>Our courier partner will use these details.</p></div>
+            </div>
+            <div class="form-grid">
+                <div class="field field-full">
+                    <label for="{{ form.address.id_for_label }}">Complete delivery address</label>
+                    {{ form.address }}
+                    {% for error in form.address.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+                </div>
+                <div class="field">
+                    <label for="{{ form.city.id_for_label }}">City</label>
+                    {{ form.city }}
+                    {% for error in form.city.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+                </div>
+                <div class="field">
+                    <label for="{{ form.state.id_for_label }}">State</label>
+                    {{ form.state }}
+                    {% for error in form.state.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+                </div>
+                <div class="field">
+                    <label for="{{ form.pin_code.id_for_label }}">PIN code</label>
+                    {{ form.pin_code }}
+                    {% for error in form.pin_code.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+                </div>
+                <div class="field field-full">
+                    <label for="{{ form.notes.id_for_label }}">Delivery notes <span class="optional">(optional)</span></label>
+                    {{ form.notes }}
+                    {% for error in form.notes.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <section class="checkout-card">
+            <div class="card-heading">
+                <span class="step-number">3</span>
+                <div><h2>Payment method</h2><p>Choose how you’d like to pay.</p></div>
+            </div>
+            {% for error in form.payment_method.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+            <div class="payment-options">
+                <label class="payment-option">
+                    <input type="radio" name="payment_method" value="COD" {% if form.payment_method.value == "COD" or not form.payment_method.value or not razorpay_enabled %}checked{% endif %}>
+                    <span class="payment-icon">💵</span>
+                    <span class="payment-copy">
+                        <strong>Cash on Delivery</strong>
+                        <small>Pay in cash when your order arrives. No advance payment.</small>
+                    </span>
+                    <span class="payment-tag">Recommended</span>
+                </label>
+                <label class="payment-option {% if not razorpay_enabled %}is-disabled{% endif %}">
+                    <input type="radio" name="payment_method" value="ONLINE" {% if not razorpay_enabled %}disabled{% endif %} {% if form.payment_method.value == "ONLINE" %}checked{% endif %}>
+                    <span class="payment-icon">💳</span>
+                    <span class="payment-copy">
+                        <strong>Online payment <span class="tag-inline">Razorpay</span></strong>
+                        <small>{% if razorpay_enabled %}Pay securely with UPI, cards or net banking.{% else %}Integration ready — add Razorpay keys in the environment to enable this option.{% endif %}</small>
+                    </span>
+                    {% if not razorpay_enabled %}<span class="payment-tag muted-tag">Not configured</span>{% endif %}
+                </label>
+            </div>
+            <p class="secure-note">🔒 Your personal data is encrypted and never shared with third parties.</p>
+        </section>
+
+        <div class="checkout-mobile-total">
+            <div><span>Total payable</span><strong>₹{{ summary.total|floatformat:0 }}</strong></div>
+            <button type="submit" class="btn btn-primary btn-lg">Place order</button>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg btn-block checkout-submit">Place order · ₹{{ summary.total|floatformat:0 }} →</button>
+        <p class="checkout-terms">By placing this order you agree to our terms of service and return policy.</p>
+    </form>
+
+    <aside class="order-summary checkout-summary">
+        <div class="summary-head">
+            <h2>Order summary</h2>
+            <span class="mode-pill">{% if mode == "buy-now" %}Buy Now{% else %}Cart{% endif %}</span>
+        </div>
+
+        <div class="checkout-items">
+            {% for product, quantity in items %}
+                <div class="checkout-item">
+                    <div class="checkout-item-media">
+                        <div class="product-placeholder" aria-hidden="true"><span>{{ product.category.icon|default:"🛍️" }}</span></div>
+                        {% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.name }}" data-product-image>{% endif %}
+                        <span class="qty-bubble">{{ quantity }}</span>
+                    </div>
+                    <div class="checkout-item-info">
+                        <strong>{{ product.name|truncatechars:46 }}</strong>
+                        <span class="muted">{{ product.category.name|default:"ClickMart" }}</span>
+                        {% if mode == "buy-now" %}
+                            <form method="post" action="{% url 'storefront:buy_now_quantity' %}" class="buy-now-qty">
+                                {% csrf_token %}
+                                <button type="submit" name="action" value="decrease" class="qty-btn qty-btn-sm" aria-label="Decrease quantity">−</button>
+                                <span>{{ quantity }}</span>
+                                <button type="submit" name="action" value="increase" class="qty-btn qty-btn-sm" aria-label="Increase quantity" {% if quantity >= product.stock %}disabled{% endif %}>+</button>
+                                <span class="qty-available">{{ product.stock }} available</span>
+                            </form>
+                        {% endif %}
+                    </div>
+                    <strong class="checkout-item-total">₹{{ product.price|floatformat:0 }}</strong>
+                </div>
+            {% endfor %}
+        </div>
+
+        {% if mode != "buy-now" %}
+            <a class="link-button small" href="{% url 'storefront:cart' %}">Edit cart</a>
+        {% endif %}
+
+        <div class="summary-lines">
+            <div><span>Subtotal</span><strong>₹{{ summary.subtotal|floatformat:0 }}</strong></div>
+            {% if summary.tax %}<div><span>Tax</span><strong>₹{{ summary.tax|floatformat:0 }}</strong></div>{% endif %}
+            <div><span>Delivery charges</span><strong>{% if summary.has_free_delivery %}<span class="success-text">FREE</span>{% else %}₹{{ summary.delivery|floatformat:0 }}{% endif %}</strong></div>
+        </div>
+        <div class="summary-total">
+            <span>Total payable</span>
+            <strong>₹{{ summary.total|floatformat:0 }}</strong>
+        </div>
+        {% if summary.has_free_delivery %}
+            <p class="free-delivery-success">🎉 Free delivery included.</p>
+        {% else %}
+            <p class="summary-note">Add ₹{{ summary.free_delivery_remaining|floatformat:0 }} more to unlock free delivery.</p>
+        {% endif %}
+
+        <div class="summary-trust">
+            <span>🔒 Secure</span>
+            <span>💵 COD available</span>
+            <span>↩️ 7-day returns</span>
+        </div>
+    </aside>
+</div>
+{% endblock %}

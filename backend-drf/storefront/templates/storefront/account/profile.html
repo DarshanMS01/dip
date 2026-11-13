@@ -1,0 +1,80 @@
+{% extends "storefront/base.html" %}
+
+{% block title %}My profile — {{ store_name }}{% endblock %}
+
+{% block content %}
+<div class="container page-head">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="{% url 'storefront:home' %}">Home</a><span>/</span><span>My profile</span>
+    </nav>
+    <h1>My account</h1>
+    <p class="muted">Manage your personal details and delivery preferences.</p>
+</div>
+
+<div class="container account-layout">
+    <aside class="account-sidebar">
+        <div class="account-identity">
+            <span class="avatar">{{ user.first_name|default:user.email|first|upper }}</span>
+            <div>
+                <strong>{{ user.get_full_name|default:user.email }}</strong>
+                <span>{{ user.email }}</span>
+            </div>
+        </div>
+        <nav class="account-nav">
+            <a class="is-active" href="{% url 'storefront:profile' %}">Profile details</a>
+            <a href="{% url 'storefront:order_history' %}">My orders</a>
+            <a href="{% url 'storefront:cart' %}">Shopping cart</a>
+            {% if user.is_staff %}<a href="{% url 'storefront:dashboard_home' %}">Admin dashboard</a>{% endif %}
+            <form method="post" action="{% url 'storefront:logout' %}">
+                {% csrf_token %}
+                <button class="link-button" type="submit">Sign out</button>
+            </form>
+        </nav>
+    </aside>
+
+    <section class="account-main">
+        <div class="stat-strip">
+            <div class="stat-card"><span>Total orders</span><strong>{{ order_count }}</strong></div>
+            <div class="stat-card"><span>Delivered</span><strong>{{ delivered_count }}</strong></div>
+            <div class="stat-card"><span>Member since</span><strong>{{ user.date_joined|date:"M Y" }}</strong></div>
+        </div>
+
+        <form method="post" class="checkout-card" novalidate>
+            {% csrf_token %}
+            <div class="card-heading">
+                <span class="step-number">👤</span>
+                <div><h2>Personal details</h2><p>Keep your contact information up to date.</p></div>
+            </div>
+            {% if form.non_field_errors %}<div class="form-alert">{{ form.non_field_errors }}</div>{% endif %}
+            <div class="form-grid">
+                <div class="field">
+                    <label for="{{ form.first_name.id_for_label }}">First name</label>
+                    {{ form.first_name }}
+                    {% for error in form.first_name.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+                </div>
+                <div class="field">
+                    <label for="{{ form.last_name.id_for_label }}">Last name</label>
+                    {{ form.last_name }}
+                    {% for error in form.last_name.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+                </div>
+                <div class="field">
+                    <label for="{{ form.phone.id_for_label }}">Mobile number</label>
+                    {{ form.phone }}
+                    {% for error in form.phone.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+                </div>
+                <div class="field">
+                    <label>Email address</label>
+                    <input class="form-input" type="email" value="{{ user.email }}" disabled>
+                    <p class="field-hint">Email is used to sign in and cannot be changed here.</p>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Save changes</button>
+        </form>
+
+        <div class="account-tip">
+            <span class="benefit-icon">💡</span>
+            <div><strong>Checkout gets faster over time.</strong><p>We pre-fill your latest delivery address when you shop with us.</p></div>
+        </div>
+    </section>
+</div>
+{% endblock %}

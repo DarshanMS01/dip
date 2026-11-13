@@ -1,0 +1,57 @@
+{% extends "storefront/base.html" %}
+
+{% block title %}Sign in — {{ store_name }}{% endblock %}
+
+{% block content %}
+<div class="container auth-wrap">
+    <section class="auth-card">
+        <div class="auth-copy">
+            <span class="eyebrow">Welcome back</span>
+            <h1>Sign in to ClickMart</h1>
+            <p>Track your orders, save your delivery details and check out faster.</p>
+        </div>
+
+        <form method="post" action="{% url 'storefront:login' %}" class="auth-form" novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next|default:'' }}">
+
+            {% if form.non_field_errors %}
+                <div class="form-alert">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <div class="field">
+                <label for="{{ form.username.id_for_label }}">Email address</label>
+                {{ form.username }}
+                {% for error in form.username.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+            </div>
+            <div class="field">
+                <div class="label-row">
+                    <label for="{{ form.password.id_for_label }}">Password</label>
+                </div>
+                {{ form.password }}
+                {% for error in form.password.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg btn-block">Sign in</button>
+            <p class="auth-switch">New to ClickMart? <a href="{% url 'storefront:register' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Create an account</a></p>
+        </form>
+    </section>
+
+    <aside class="auth-aside">
+        <div class="auth-aside-card">
+            <span class="benefit-icon">📦</span>
+            <h2>Everything in one place</h2>
+            <ul>
+                <li>Order history with live status</li>
+                <li>Saved delivery details</li>
+                <li>Cart saved across devices</li>
+                <li>Faster, one-click checkout</li>
+            </ul>
+        </div>
+        <div class="auth-quote">
+            <p>“Finally a store that gets the basics right — clear prices, quick delivery and no checkout surprises.”</p>
+            <span>— A happy ClickMart customer</span>
+        </div>
+    </aside>
+</div>
+{% endblock %}

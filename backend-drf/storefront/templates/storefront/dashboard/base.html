@@ -1,0 +1,34 @@
+{% extends "storefront/base.html" %}
+
+{% block content %}
+<div class="container dashboard-layout">
+    <aside class="dashboard-sidebar">
+        <div class="dashboard-brand">
+            <span class="brand-mark">C</span>
+            <div><strong>Admin</strong><span>{{ store_name }} console</span></div>
+        </div>
+        <nav class="dashboard-nav">
+            <a href="{% url 'storefront:dashboard_home' %}" class="{% if request.resolver_match.url_name == 'dashboard_home' %}is-active{% endif %}">
+                <span>▦</span> Overview
+            </a>
+            <a href="{% url 'storefront:dashboard_products' %}" class="{% if 'dashboard_product' in request.resolver_match.url_name %}is-active{% endif %}">
+                <span>🏷️</span> Products
+            </a>
+            <a href="{% url 'storefront:dashboard_orders' %}" class="{% if 'dashboard_order' in request.resolver_match.url_name %}is-active{% endif %}">
+                <span>📦</span> Orders
+            </a>
+            <a href="{% url 'storefront:dashboard_categories' %}" class="{% if 'dashboard_categor' in request.resolver_match.url_name %}is-active{% endif %}">
+                <span>🗂️</span> Categories
+            </a>
+            <a href="/admin/" target="_blank" rel="noopener"><span>⚙️</span> Django admin</a>
+        </nav>
+        <div class="dashboard-sidebar-footer">
+            <a class="btn btn-soft btn-sm btn-block" href="{% url 'storefront:home' %}">← View storefront</a>
+        </div>
+    </aside>
+
+    <section class="dashboard-main">
+        {% block dashboard_content %}{% endblock %}
+    </section>
+</div>
+{% endblock %}

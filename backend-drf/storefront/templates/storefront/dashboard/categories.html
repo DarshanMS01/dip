@@ -1,0 +1,60 @@
+{% extends "storefront/dashboard/base.html" %}
+
+{% block title %}Categories — {{ store_name }} admin{% endblock %}
+
+{% block dashboard_content %}
+<div class="dashboard-head">
+    <div>
+        <span class="eyebrow">Store structure</span>
+        <h1>Categories</h1>
+        <p class="muted">Organise products so customers can find what they need.</p>
+    </div>
+</div>
+
+<div class="dashboard-grid dashboard-grid-categories">
+    <section class="panel">
+        <div class="panel-head"><h2>Add a category</h2></div>
+        <form method="post" class="category-form">
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="form-alert">{{ form.non_field_errors }}</div>{% endif %}
+            <div class="field">
+                <label for="{{ form.name.id_for_label }}">Name</label>
+                {{ form.name }}
+                {% for error in form.name.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+            </div>
+            <div class="field">
+                <label for="{{ form.icon.id_for_label }}">Icon</label>
+                {{ form.icon }}
+                {% for error in form.icon.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+            </div>
+            <div class="field">
+                <label for="{{ form.description.id_for_label }}">Short description</label>
+                {{ form.description }}
+                {% for error in form.description.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+            </div>
+            <button type="submit" class="btn btn-primary">Add category</button>
+        </form>
+    </section>
+
+    <section class="panel">
+        <div class="panel-head"><h2>All categories</h2><span class="muted">{{ categories|length }} total</span></div>
+        <div class="category-list">
+            {% for category in categories %}
+                <div class="category-row">
+                    <span class="category-icon">{{ category.icon|default:"🛍️" }}</span>
+                    <div><strong>{{ category.name }}</strong><small class="muted">{{ category.product_count }} product{{ category.product_count|pluralize }}</small></div>
+                    <div class="table-actions">
+                        <a class="link-button small" href="{% url 'storefront:dashboard_category_edit' category.pk %}">Edit</a>
+                        <form method="post" action="{% url 'storefront:dashboard_category_delete' category.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="link-button small danger" data-confirm="Delete category {{ category.name }}?">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            {% empty %}
+                <p class="muted">No categories yet. Add one to start organising products.</p>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock %}

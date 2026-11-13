@@ -20,6 +20,72 @@ You will go step-by-step from:
 
 ---
 
+## 🛍️ ClickMart Storefront (Django + PostgreSQL)
+
+This repository now includes a complete server-rendered shopping experience at
+`/`. The original REST API remains available at `/api/v1/` and Django admin at
+`/admin/`.
+
+**Included features**
+
+- 28 seeded products across 6 categories, with local product images
+- Search, category filters and sorting (newest, price low/high, name)
+- Buy Now and Add to Cart, quantity controls, stock checks and cart totals
+- Guest session carts plus persistent carts for signed-in customers
+- Checkout with full name, mobile, email, address, city, state and PIN code
+- Cash on Delivery, with Razorpay-ready online payment (enable with keys)
+- Unique order numbers with Pending → Confirmed → Shipped → Delivered statuses
+- Customer registration, login, profile, order confirmation and order history
+- Staff dashboard at `/dashboard/` for products, stock, prices, categories and
+  order/payment status updates
+
+### Run the storefront locally
+
+```sh
+cd backend-drf
+env\Scripts\activate          # Windows
+# source env/bin/activate     # Mac / Linux
+
+python manage.py migrate
+python manage.py seed_products
+python manage.py createsuperuser
+python manage.py runserver
+```
+
+Open http://127.0.0.1:8000/ for the store. Sign in with the superuser account
+and open **Dashboard** in the header (or `/dashboard/`) to manage the store.
+`seed_products` is safe to run again; it updates products in place and only
+downloads images that are missing. If the image CDN is unreachable it writes a
+branded placeholder image instead.
+
+### Enable online payments (optional)
+
+Online payment is disabled until Razorpay keys are configured. Add these to
+`backend-drf/.env` and restart the server:
+
+```sh
+RAZORPAY_ENABLED=True
+RAZORPAY_KEY_ID=rzp_test_...
+RAZORPAY_KEY_SECRET=...
+```
+
+Cash on Delivery works without any payment credentials.
+
+### Run the automated checks
+
+```sh
+cd backend-drf
+python manage.py check
+python manage.py test storefront
+```
+
+The test suite covers catalog search/filter/sort, guest and signed-in carts,
+guest-cart merging on login, Buy Now quantities, checkout validation, COD order
+placement, stock updates, order history access, staff permissions, dashboard
+product/category CRUD and order status updates.
+
+---
+
 ## 🧰 Prerequisites
 
 Install the following on your system:

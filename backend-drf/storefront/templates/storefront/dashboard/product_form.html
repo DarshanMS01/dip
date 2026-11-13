@@ -1,0 +1,86 @@
+{% extends "storefront/dashboard/base.html" %}
+
+{% block title %}{{ title }} — {{ store_name }} admin{% endblock %}
+
+{% block dashboard_content %}
+<div class="dashboard-head">
+    <div>
+        <span class="eyebrow">Catalog</span>
+        <h1>{{ title }}</h1>
+        <p class="muted">{% if is_create %}Add a new product to your storefront.{% else %}Update product details, price and stock.{% endif %}</p>
+    </div>
+    <div class="dashboard-head-actions">
+        <a class="btn btn-outline" href="{% url 'storefront:dashboard_products' %}">← Back to products</a>
+    </div>
+</div>
+
+<form method="post" enctype="multipart/form-data" class="panel product-form" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="form-alert">{{ form.non_field_errors }}</div>{% endif %}
+
+    <div class="form-grid">
+        <div class="field field-full">
+            <label for="{{ form.name.id_for_label }}">Product name</label>
+            {{ form.name }}
+            {% for error in form.name.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+        </div>
+        <div class="field">
+            <label for="{{ form.category.id_for_label }}">Category</label>
+            {{ form.category }}
+            {% for error in form.category.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+        </div>
+        <div class="field">
+            <label for="{{ form.brand.id_for_label }}">Brand</label>
+            {{ form.brand }}
+            {% for error in form.brand.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+        </div>
+        <div class="field">
+            <label for="{{ form.price.id_for_label }}">Selling price (₹)</label>
+            {{ form.price }}
+            {% for error in form.price.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+        </div>
+        <div class="field">
+            <label for="{{ form.mrp.id_for_label }}">MRP (₹) <span class="optional">(optional)</span></label>
+            {{ form.mrp }}
+            {% for error in form.mrp.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+        </div>
+        <div class="field">
+            <label for="{{ form.stock.id_for_label }}">Stock quantity</label>
+            {{ form.stock }}
+            {% for error in form.stock.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+        </div>
+        <div class="field">
+            <label for="{{ form.tax_percent.id_for_label }}">Tax percent</label>
+            {{ form.tax_percent }}
+            {% for error in form.tax_percent.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+        </div>
+        <div class="field field-full">
+            <label for="{{ form.description.id_for_label }}">Description</label>
+            {{ form.description }}
+            {% for error in form.description.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+        </div>
+        <div class="field field-full">
+            <label for="{{ form.image.id_for_label }}">Product image</label>
+            {% if product.image %}
+                <div class="current-image">
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                    <span class="muted">Upload a new image to replace this one.</span>
+                </div>
+            {% endif %}
+            {{ form.image }}
+            {% for error in form.image.errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+            <p class="field-hint">Square JPEG, PNG or WebP around 800×800px works best.</p>
+        </div>
+    </div>
+
+    <div class="checkbox-row">
+        <label class="checkbox">{{ form.is_active }} <span>Visible in storefront</span></label>
+        <label class="checkbox">{{ form.is_featured }} <span>Feature on home page</span></label>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary btn-lg">{% if is_create %}Create product{% else %}Save changes{% endif %}</button>
+        <a class="btn btn-outline" href="{% url 'storefront:dashboard_products' %}">Cancel</a>
+    </div>
+</form>
+{% endblock %}

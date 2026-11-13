@@ -1,0 +1,100 @@
+{% extends "storefront/base.html" %}
+
+{% block title %}Shop all products — {{ store_name }}{% endblock %}
+
+{% block content %}
+<div class="container page-head">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="{% url 'storefront:home' %}">Home</a><span>/</span>
+        <span>{% if active_category %}{{ active_category.name }}{% else %}All products{% endif %}</span>
+    </nav>
+    <div class="page-head-row">
+        <div>
+            <h1>{% if active_category %}{{ active_category.name }}{% elif query %}Results for “{{ query }}”{% else %}All products{% endif %}</h1>
+            <p class="muted">{{ result_count }} product{{ result_count|pluralize }}{% if query %} matching your search{% endif %}</p>
+        </div>
+        <form class="sort-form" method="get" action="{% url 'storefront:product_list' %}">
+            {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+            {% if category_slug %}<input type="hidden" name="category" value="{{ category_slug }}">{% endif %}
+            <label for="sort">Sort by</label>
+            <select id="sort" name="sort" class="form-input form-select js-auto-submit">
+                {% for option in sort_options %}
+                    <option value="{{ option.value }}" {% if option.value == sort %}selected{% endif %}>{{ option.label }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+</div>
+
+<div class="container catalog-layout">
+    <aside class="catalog-sidebar">
+        <form class="catalog-search" method="get" action="{% url 'storefront:product_list' %}">
+            <label for="catalog-q">Search products</label>
+            <div class="search-field">
+                <input id="catalog-q" type="search" name="q" value="{{ query }}" placeholder="What are you looking for?">
+                {% if category_slug %}<input type="hidden" name="category" value="{{ category_slug }}">{% endif %}
+                {% if sort %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
+                <button type="submit" aria-label="Search">→</button>
+            </div>
+        </form>
+
+        <div class="filter-block">
+            <h3>Categories</h3>
+            <ul class="filter-list">
+                <li>
+                    <a class="{% if not category_slug %}is-active{% endif %}" href="{% url 'storefront:product_list' %}{% if query or sort %}?{% if query %}q={{ query|urlencode }}{% endif %}{% if query and sort %}&{% endif %}{% if sort %}sort={{ sort }}{% endif %}{% endif %}">
+                        <span>All products</span><em>{{ result_count }}</em>
+                    </a>
+                </li>
+                {% for category in categories %}
+                    <li>
+                        <a class="{% if category_slug == category.slug %}is-active{% endif %}" href="{% url 'storefront:product_list' %}?category={{ category.slug }}{% if query %}&q={{ query|urlencode }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}">
+                            <span>{{ category.icon|default:"•" }} {{ category.name }}</span><em>{{ category.product_count }}</em>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="filter-help">
+            <span class="benefit-icon">💬</span>
+            <div>
+                <strong>Need help choosing?</strong>
+                <p>Our team is one email away.</p>
+                <a href="mailto:support@clickmart.local">Contact support</a>
+            </div>
+        </div>
+    </aside>
+
+    <section class="catalog-main" aria-label="Products">
+        <div class="mobile-filter-pills">
+            <a class="pill {% if not category_slug %}is-active{% endif %}" href="{% url 'storefront:product_list' %}{% if query %}?q={{ query|urlencode }}{% endif %}">All</a>
+            {% for category in categories %}
+                <a class="pill {% if category_slug == category.slug %}is-active{% endif %}" href="{% url 'storefront:product_list' %}?category={{ category.slug }}{% if query %}&q={{ query|urlencode }}{% endif %}">{{ category.name }}</a>
+            {% endfor %}
+        </div>
+
+        {% if query or active_category %}
+            <div class="active-filters">
+                <span>Active filters:</span>
+                {% if query %}<a class="chip" href="?{% if category_slug %}category={{ category_slug }}&{% endif %}sort={{ sort }}">“{{ query }}” ×</a>{% endif %}
+                {% if active_category %}<a class="chip" href="?{% if query %}q={{ query|urlencode }}&{% endif %}sort={{ sort }}">{{ active_category.name }} ×</a>{% endif %}
+                <a class="clear-filters" href="{% url 'storefront:product_list' %}">Clear all</a>
+            </div>
+        {% endif %}
+
+        <div class="product-grid product-grid-catalog">
+            {% for product in products %}
+                {% include "storefront/includes/product_card.html" with product=product %}
+            {% empty %}
+                <div class="empty-state empty-wide">
+                    <span class="empty-icon">🔎</span>
+                    <h3>No products found</h3>
+                    <p>Try a different search term or browse another category.</p>
+                    <a class="btn btn-primary" href="{% url 'storefront:product_list' %}">Reset filters</a>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock %}

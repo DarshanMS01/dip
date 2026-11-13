@@ -1,0 +1,59 @@
+{% extends "storefront/base.html" %}
+
+{% block title %}My orders — {{ store_name }}{% endblock %}
+
+{% block content %}
+<div class="container page-head">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="{% url 'storefront:home' %}">Home</a><span>/</span><span>My orders</span>
+    </nav>
+    <div class="page-head-row">
+        <div>
+            <h1>My orders</h1>
+            <p class="muted">Track every order from confirmation to delivery.</p>
+        </div>
+        <a class="btn btn-outline" href="{% url 'storefront:profile' %}">Account settings</a>
+    </div>
+</div>
+
+<div class="container orders-list">
+    {% for order in orders %}
+        <article class="order-card">
+            <div class="order-card-head">
+                <div>
+                    <span class="muted">Order</span>
+                    <strong>{{ order.order_number }}</strong>
+                    <span class="muted">· {{ order.created_at|date:"d M Y, h:i A" }}</span>
+                </div>
+                <span class="status-badge status-{{ order.status|lower }}">{{ order.get_status_display }}</span>
+            </div>
+            <div class="order-card-body">
+                <div class="order-thumbs">
+                    {% for item in order.items.all|slice:":4" %}
+                        <div class="order-thumb">
+                            <div class="product-placeholder" aria-hidden="true"><span>{{ item.product.category.icon|default:"🛍️" }}</span></div>
+                            {% if item.product.image %}<img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" data-product-image>{% endif %}
+                        </div>
+                    {% endfor %}
+                    {% if order.items.count > 4 %}<span class="more-items">+{{ order.items.count|add:"-4" }}</span>{% endif %}
+                    <div class="order-summary-copy">
+                        <strong>₹{{ order.grand_total|floatformat:0 }}</strong>
+                        <span class="muted">{{ order.total_quantity }} item{{ order.total_quantity|pluralize }} · {{ order.get_payment_method_display }}</span>
+                    </div>
+                </div>
+                <div class="order-card-actions">
+                    <a class="btn btn-soft" href="{% url 'storefront:order_detail' order.order_number %}">View details</a>
+                    <a class="link-button small" href="{% url 'storefront:product_list' %}">Buy again</a>
+                </div>
+            </div>
+        </article>
+    {% empty %}
+        <div class="empty-state">
+            <span class="empty-icon">📦</span>
+            <h2>No orders yet</h2>
+            <p>When you place an order, it will appear here with live status updates.</p>
+            <a class="btn btn-primary" href="{% url 'storefront:product_list' %}">Start shopping</a>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

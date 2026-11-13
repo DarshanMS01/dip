@@ -1,0 +1,104 @@
+{% extends "storefront/base.html" %}
+
+{% block title %}Your cart — {{ store_name }}{% endblock %}
+
+{% block content %}
+<div class="container page-head">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="{% url 'storefront:home' %}">Home</a><span>/</span><span>Cart</span>
+    </nav>
+    <h1>Your shopping cart</h1>
+    <p class="muted">{% if items %}{{ items|length }} product{{ items|length|pluralize }} in your cart{% else %}Your cart is empty{% endif %}</p>
+</div>
+
+<div class="container cart-layout">
+    <section class="cart-items" aria-label="Cart items">
+        {% if items %}
+            {% for item in items %}
+                <article class="cart-item">
+                    <a class="cart-item-media" href="{% url 'storefront:product_detail' item.product.pk %}">
+                        <div class="product-placeholder" aria-hidden="true"><span>{{ item.product.category.icon|default:"🛍️" }}</span></div>
+                        {% if item.product.image %}<img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" loading="lazy" data-product-image>{% endif %}
+                    </a>
+                    <div class="cart-item-info">
+                        <span class="product-eyebrow">{{ item.product.category.name|default:"ClickMart" }}</span>
+                        <h3><a href="{% url 'storefront:product_detail' item.product.pk %}">{{ item.product.name }}</a></h3>
+                        <p class="muted">₹{{ item.product.price|floatformat:0 }} each · {{ item.product.stock_label }}</p>
+                        {% if item.quantity > item.product.stock %}
+                            <p class="form-error">Your quantity exceeds available stock ({{ item.product.stock }}). Please update it.</p>
+                        {% endif %}
+                        <div class="cart-item-controls">
+                            <form method="post" action="{% url 'storefront:cart_update' item.pk %}" class="qty-form">
+                                {% csrf_token %}
+                                <div class="qty-stepper qty-stepper-sm">
+                                    <button type="submit" name="action" value="decrease" class="qty-btn" aria-label="Decrease quantity">−</button>
+                                    <input type="number" name="quantity" value="{{ item.quantity }}" min="1" max="{{ item.product.stock }}" aria-label="Quantity for {{ item.product.name }}">
+                                    <button type="submit" name="action" value="increase" class="qty-btn" aria-label="Increase quantity">+</button>
+                                </div>
+                                <button type="submit" class="link-button small">Update</button>
+                            </form>
+                            <form method="post" action="{% url 'storefront:cart_remove' item.pk %}">
+                                {% csrf_token %}
+                                <button type="submit" class="link-button danger">Remove</button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="cart-item-total">
+                        <strong>₹{{ item.total_price|floatformat:0 }}</strong>
+                    </div>
+                </article>
+            {% endfor %}
+
+            <div class="cart-footer-actions">
+                <a class="btn btn-outline" href="{% url 'storefront:product_list' %}">← Continue shopping</a>
+                <form method="post" action="{% url 'storefront:cart_clear' %}">
+                    {% csrf_token %}
+                    <button class="link-button danger" type="submit" data-confirm="Remove all items from your cart?">Clear cart</button>
+                </form>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <span class="empty-icon">🛒</span>
+                <h2>Your cart is empty</h2>
+                <p>Explore our latest arrivals and add something you love.</p>
+                <a class="btn btn-primary" href="{% url 'storefront:product_list' %}">Start shopping</a>
+            </div>
+        {% endif %}
+    </section>
+
+    {% if items %}
+        <aside class="order-summary">
+            <h2>Order summary</h2>
+            <div class="summary-lines">
+                <div><span>Subtotal</span><strong>₹{{ summary.subtotal|floatformat:0 }}</strong></div>
+                {% if summary.tax %}<div><span>Tax</span><strong>₹{{ summary.tax|floatformat:0 }}</strong></div>{% endif %}
+                <div>
+                    <span>Delivery</span>
+                    <strong>{% if summary.has_free_delivery %}<span class="success-text">FREE</span>{% else %}₹{{ summary.delivery|floatformat:0 }}{% endif %}</strong>
+                </div>
+            </div>
+
+            {% if not summary.has_free_delivery %}
+                <div class="free-delivery-nudge">
+                    <p>Add <strong>₹{{ summary.free_delivery_remaining|floatformat:0 }}</strong> more for free delivery.</p>
+                    <div class="progress-track"><span style="width: {{ summary.free_delivery_progress }}%;"></span></div>
+                </div>
+            {% else %}
+                <p class="free-delivery-success">🎉 You’ve unlocked free delivery.</p>
+            {% endif %}
+
+            <div class="summary-total">
+                <span>Total</span>
+                <strong>₹{{ summary.total|floatformat:0 }}</strong>
+            </div>
+            <p class="summary-note">Inclusive of all taxes. Delivery charges calculated automatically.</p>
+
+            <a class="btn btn-primary btn-lg btn-block" href="{% url 'storefront:checkout' %}">Proceed to checkout →</a>
+            <div class="summary-trust">
+                <span>🔒 Secure checkout</span>
+                <span>💵 Cash on Delivery</span>
+            </div>
+        </aside>
+    {% endif %}
+</div>
+{% endblock %}

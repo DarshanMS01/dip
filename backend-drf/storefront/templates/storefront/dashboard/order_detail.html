@@ -1,0 +1,90 @@
+{% extends "storefront/dashboard/base.html" %}
+
+{% block title %}Order {{ order.order_number }} — {{ store_name }} admin{% endblock %}
+
+{% block dashboard_content %}
+<div class="dashboard-head">
+    <div>
+        <span class="eyebrow">Order management</span>
+        <h1>{{ order.order_number }}</h1>
+        <p class="muted">Placed {{ order.created_at|date:"d M Y, h:i A" }} · Updated {{ order.updated_at|date:"d M, h:i A" }}</p>
+    </div>
+    <div class="dashboard-head-actions">
+        <a class="btn btn-outline" href="{% url 'storefront:dashboard_orders' %}">← All orders</a>
+        <a class="btn btn-soft" href="{% url 'storefront:order_success' order.order_number %}" target="_blank">Customer view</a>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <section class="panel">
+        <div class="panel-head"><h2>Update order</h2><span class="status-badge status-{{ order.status|lower }}">{{ order.get_status_display }}</span></div>
+        <form method="post" class="status-form">
+            {% csrf_token %}
+            <div class="field">
+                <label for="status">Order status</label>
+                <select id="status" name="status" class="form-input form-select">
+                    {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if order.status == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="field">
+                <label for="payment_status">Payment status</label>
+                <select id="payment_status" name="payment_status" class="form-input form-select">
+                    {% for value, label in payment_status_choices %}
+                        <option value="{{ value }}" {% if order.payment_status == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Save order update</button>
+        </form>
+
+        <div class="info-block">
+            <h3>Payment details</h3>
+            <p>{{ order.get_payment_method_display }} · <strong>₹{{ order.grand_total|floatformat:2 }}</strong><br>
+            Status: {{ order.get_payment_status_display }}<br>
+            {% if order.razorpay_order_id %}<small class="muted">Razorpay order: {{ order.razorpay_order_id }}</small><br>{% endif %}
+            {% if order.razorpay_payment_id %}<small class="muted">Payment: {{ order.razorpay_payment_id }}</small>{% endif %}</p>
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="panel-head"><h2>Customer &amp; delivery</h2></div>
+        <div class="info-block">
+            <h3>Customer</h3>
+            <p><strong>{{ order.full_name|default:"Guest customer" }}</strong><br>
+            ✉️ {{ order.email }}<br>📞 {{ order.phone }}{% if order.user %}<br><small class="muted">Account: {{ order.user.email }}</small>{% endif %}</p>
+        </div>
+        <div class="info-block">
+            <h3>Shipping address</h3>
+            <p>{{ order.address }}<br>{{ order.city }}, {{ order.state }} — {{ order.zip_code }}</p>
+        </div>
+        {% if order.notes %}<div class="info-block"><h3>Delivery notes</h3><p>{{ order.notes }}</p></div>{% endif %}
+    </section>
+</div>
+
+<section class="panel">
+    <div class="panel-head"><h2>Order items</h2><span class="muted">{{ order.total_quantity }} item{{ order.total_quantity|pluralize }}</span></div>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead><tr><th>Product</th><th>Price</th><th>Qty</th><th class="align-right">Line total</th></tr></thead>
+            <tbody>
+                {% for item in order.items.all %}
+                    <tr>
+                        <td><strong>{{ item.product.name }}</strong><br><small class="muted">CM-{{ item.product.pk|stringformat:"05d" }}</small></td>
+                        <td>₹{{ item.price|floatformat:2 }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td class="align-right"><strong>₹{{ item.total_price|floatformat:2 }}</strong></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="summary-lines compact">
+        <div><span>Subtotal</span><strong>₹{{ order.subtotal|floatformat:2 }}</strong></div>
+        <div><span>Tax</span><strong>₹{{ order.tax_amount|floatformat:2 }}</strong></div>
+        <div><span>Delivery</span><strong>{% if order.delivery_charge %}₹{{ order.delivery_charge|floatformat:2 }}{% else %}FREE{% endif %}</strong></div>
+        <div class="grand"><span>Grand total</span><strong>₹{{ order.grand_total|floatformat:2 }}</strong></div>
+    </div>
+</section>
+{% endblock %}

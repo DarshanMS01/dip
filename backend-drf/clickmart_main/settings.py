@@ -13,7 +13,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in config(
+        "ALLOWED_HOSTS", default="localhost,127.0.0.1,testserver"
+    ).split(",")
+    if host.strip()
+]
 
 # Application definition
 INSTALLED_APPS = [
@@ -31,6 +37,7 @@ INSTALLED_APPS = [
     'products',
     'carts',
     'orders',
+    'storefront',
     'corsheaders',
 ]
 
@@ -60,6 +67,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'storefront.context_processors.cart_summary',
             ],
         },
     },
@@ -146,3 +154,26 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
 ]
+
+# Storefront configuration
+STORE_NAME = config("STORE_NAME", default="ClickMart")
+STORE_SUPPORT_EMAIL = config(
+    "STORE_SUPPORT_EMAIL", default="support@clickmart.local"
+)
+STORE_FREE_DELIVERY_THRESHOLD = config(
+    "STORE_FREE_DELIVERY_THRESHOLD", default="999", cast=float
+)
+STORE_DELIVERY_FEE = config("STORE_DELIVERY_FEE", default="49", cast=float)
+
+# Django auth redirects for the server-rendered storefront
+LOGIN_URL = "storefront:login"
+LOGIN_REDIRECT_URL = "storefront:home"
+LOGOUT_REDIRECT_URL = "storefront:home"
+DEFAULT_FROM_EMAIL = config(
+    "DEFAULT_FROM_EMAIL", default=config("EMAIL_HOST_USER", default="noreply@clickmart.local")
+)
+
+# Razorpay readiness. Fill these environment variables to enable online payments.
+RAZORPAY_KEY_ID = config("RAZORPAY_KEY_ID", default="")
+RAZORPAY_KEY_SECRET = config("RAZORPAY_KEY_SECRET", default="")
+RAZORPAY_ENABLED = bool(RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET)

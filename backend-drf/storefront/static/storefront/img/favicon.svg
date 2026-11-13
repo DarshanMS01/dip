@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="ClickMart">
+  <rect width="64" height="64" rx="16" fill="#0f172a"/>
+  <path d="M16 20h4l4 20h20l4-14H24" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="29" cy="48" r="3.4" fill="#f97316"/>
+  <circle cx="44" cy="48" r="3.4" fill="#f97316"/>
+  <path d="M33 20h10" stroke="#f97316" stroke-width="4" stroke-linecap="round"/>
+</svg>

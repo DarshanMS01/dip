@@ -1,0 +1,57 @@
+{% load static %}
+<article class="product-card">
+    <a class="product-media" href="{% url 'storefront:product_detail' product.pk %}" aria-label="View {{ product.name }}">
+        <div class="product-placeholder" aria-hidden="true">
+            <span>{{ product.category.icon|default:"🛍️" }}</span>
+            <small>{{ product.category.name|default:"ClickMart" }}</small>
+        </div>
+        {% if product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy" data-product-image>
+        {% endif %}
+        {% if product.discount_percent %}
+            <span class="badge badge-discount">{{ product.discount_percent }}% off</span>
+        {% endif %}
+        {% if not product.in_stock %}
+            <span class="stock-overlay">Out of stock</span>
+        {% elif product.stock <= 5 %}
+            <span class="badge badge-low">Only {{ product.stock }} left</span>
+        {% endif %}
+    </a>
+
+    <div class="product-body">
+        <div class="product-eyebrow">
+            <span>{{ product.category.name|default:"Uncategorised" }}</span>
+            {% if product.brand %}<span class="dot">·</span><span>{{ product.brand }}</span>{% endif %}
+        </div>
+        <h3 class="product-title">
+            <a href="{% url 'storefront:product_detail' product.pk %}">{{ product.name }}</a>
+        </h3>
+        <div class="price-row">
+            <strong class="price">₹{{ product.price|floatformat:0 }}</strong>
+            {% if product.mrp and product.mrp > product.price %}
+                <s class="mrp">₹{{ product.mrp|floatformat:0 }}</s>
+            {% endif %}
+        </div>
+        <p class="stock-line {% if product.in_stock %}in-stock{% else %}out-stock{% endif %}">
+            {% if product.in_stock %}In stock &amp; ready to ship{% else %}Currently unavailable{% endif %}
+        </p>
+
+        <div class="card-actions">
+            {% if product.in_stock %}
+                <form method="post" action="{% url 'storefront:cart_add' product.pk %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="quantity" value="1">
+                    <input type="hidden" name="next" value="{{ request.path }}">
+                    <button type="submit" class="btn btn-soft btn-block">Add to cart</button>
+                </form>
+                <form method="post" action="{% url 'storefront:buy_now' product.pk %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="quantity" value="1">
+                    <button type="submit" class="btn btn-primary btn-block">Buy now</button>
+                </form>
+            {% else %}
+                <button type="button" class="btn btn-disabled btn-block" disabled>Out of stock</button>
+            {% endif %}
+        </div>
+    </div>
+</article>

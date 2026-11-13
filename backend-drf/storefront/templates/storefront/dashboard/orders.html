@@ -1,0 +1,56 @@
+{% extends "storefront/dashboard/base.html" %}
+
+{% block title %}Orders — {{ store_name }} admin{% endblock %}
+
+{% block dashboard_content %}
+<div class="dashboard-head">
+    <div>
+        <span class="eyebrow">Fulfilment</span>
+        <h1>Customer orders</h1>
+        <p class="muted">Review orders, confirm them and keep customers updated.</p>
+    </div>
+</div>
+
+<form class="dashboard-filters" method="get">
+    <div class="search-field">
+        <input type="search" name="q" value="{{ query }}" placeholder="Order number, name, email or phone">
+        <button type="submit" aria-label="Search">→</button>
+    </div>
+    <select name="status" class="form-input form-select js-auto-submit">
+        <option value="">All statuses</option>
+        {% for value, label in status_choices %}
+            <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-soft">Filter</button>
+    {% if query or status %}<a class="link-button small" href="{% url 'storefront:dashboard_orders' %}">Reset</a>{% endif %}
+</form>
+
+<div class="panel">
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr><th>Order</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th class="align-right">Manage</th></tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                    <tr>
+                        <td><strong>{{ order.order_number }}</strong><br><small class="muted">{{ order.created_at|date:"d M Y, h:i A" }}</small></td>
+                        <td>{{ order.full_name|default:order.email }}<br><small class="muted">{{ order.email }}</small></td>
+                        <td>{{ order.total_quantity }}</td>
+                        <td><strong>₹{{ order.grand_total|floatformat:0 }}</strong></td>
+                        <td>
+                            {{ order.get_payment_method_display }}<br>
+                            <span class="status-badge status-{{ order.payment_status|lower }}">{{ order.get_payment_status_display }}</span>
+                        </td>
+                        <td><span class="status-badge status-{{ order.status|lower }}">{{ order.get_status_display }}</span></td>
+                        <td class="align-right"><a class="btn btn-soft btn-sm" href="{% url 'storefront:dashboard_order_detail' order.order_number %}">View</a></td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="7"><div class="empty-state compact"><span class="empty-icon">📦</span><h3>No orders found</h3><p>Orders placed by customers will show up here.</p></div></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends "storefront/base.html" %}
+
+{% block title %}{{ product.name }} — {{ store_name }}{% endblock %}
+{% block meta_description %}{{ product.description|truncatechars:150 }}{% endblock %}
+
+{% block content %}
+<div class="container page-head">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="{% url 'storefront:home' %}">Home</a><span>/</span>
+        <a href="{% url 'storefront:product_list' %}">Products</a><span>/</span>
+        {% if product.category %}<a href="{% url 'storefront:product_list' %}?category={{ product.category.slug }}">{{ product.category.name }}</a><span>/</span>{% endif %}
+        <span>{{ product.name|truncatechars:42 }}</span>
+    </nav>
+</div>
+
+<div class="container product-detail">
+    <div class="detail-gallery">
+        <div class="detail-media">
+            <div class="product-placeholder product-placeholder-lg" aria-hidden="true">
+                <span>{{ product.category.icon|default:"🛍️" }}</span>
+                <small>{{ product.category.name|default:"ClickMart" }}</small>
+            </div>
+            {% if product.image %}<img src="{{ product.image.url }}" alt="{{ product.name }}" data-product-image>{% endif %}
+            {% if product.discount_percent %}<span class="badge badge-discount">{{ product.discount_percent }}% off</span>{% endif %}
+        </div>
+        <div class="detail-assurance">
+            <span>🔒 Secure checkout</span>
+            <span>↩️ 7-day returns</span>
+            <span>🚚 Fast dispatch</span>
+        </div>
+    </div>
+
+    <div class="detail-info">
+        <div class="product-eyebrow">
+            <span>{{ product.category.name|default:"Uncategorised" }}</span>
+            {% if product.brand %}<span class="dot">·</span><span>{{ product.brand }}</span>{% endif %}
+        </div>
+        <h1>{{ product.name }}</h1>
+
+        <div class="detail-price">
+            <strong>₹{{ product.price|floatformat:0 }}</strong>
+            {% if product.mrp and product.mrp > product.price %}
+                <s>₹{{ product.mrp|floatformat:0 }}</s>
+                <span class="save-pill">You save ₹{{ product.savings|floatformat:0 }}</span>
+            {% endif %}
+        </div>
+        <p class="tax-note">Inclusive of all taxes. Delivery calculated at checkout.</p>
+
+        <p class="detail-stock {% if product.in_stock %}in-stock{% else %}out-stock{% endif %}">
+            {% if product.in_stock %}
+                <span class="status-dot"></span> {{ product.stock_label }} — ships within 24–48 hours
+            {% else %}
+                <span class="status-dot"></span> Out of stock
+            {% endif %}
+        </p>
+
+        <div class="detail-description">
+            <p>{{ product.description|default:"A thoughtfully selected product, quality checked and ready to ship."|linebreaksbr }}</p>
+        </div>
+
+        {% if product.in_stock %}
+            <form method="post" action="{% url 'storefront:cart_add' product.pk %}" class="purchase-form">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.path }}">
+                <div class="purchase-row">
+                    <div class="qty-stepper" data-qty-stepper>
+                        <button type="button" class="qty-btn" data-qty-down aria-label="Decrease quantity">−</button>
+                        <input type="number" name="quantity" value="1" min="1" max="{{ product.stock }}" aria-label="Quantity" data-qty-input>
+                        <button type="button" class="qty-btn" data-qty-up aria-label="Increase quantity">+</button>
+                    </div>
+                    <span class="qty-hint">{{ product.stock }} available</span>
+                </div>
+                <div class="purchase-actions">
+                    <button type="submit" class="btn btn-soft btn-lg">Add to cart</button>
+                    <button type="submit" formaction="{% url 'storefront:buy_now' product.pk %}" class="btn btn-primary btn-lg">Buy now →</button>
+                </div>
+            </form>
+        {% else %}
+            <div class="purchase-actions">
+                <button type="button" class="btn btn-disabled btn-lg" disabled>Out of stock</button>
+                <a class="btn btn-outline btn-lg" href="{% url 'storefront:product_list' %}">Browse similar products</a>
+            </div>
+        {% endif %}
+
+        <div class="detail-facts">
+            <div class="fact"><span>Delivery</span><strong>Free over ₹{{ free_delivery_threshold|floatformat:0 }}, else ₹{{ delivery_fee|floatformat:0 }}</strong></div>
+            <div class="fact"><span>Payment</span><strong>Cash on Delivery available</strong></div>
+            <div class="fact"><span>Returns</span><strong>7-day return window</strong></div>
+            <div class="fact"><span>Product ID</span><strong>CM-{{ product.pk|stringformat:"05d" }}</strong></div>
+        </div>
+    </div>
+</div>
+
+{% if related_products %}
+<section class="section section-muted">
+    <div class="container">
+        <div class="section-head">
+            <div>
+                <span class="eyebrow">You may also like</span>
+                <h2>Similar products</h2>
+            </div>
+            <a class="text-link" href="{% url 'storefront:product_list' %}{% if product.category %}?category={{ product.category.slug }}{% endif %}">View category →</a>
+        </div>
+        <div class="product-grid product-grid-4">
+            {% for related in related_products %}
+                {% include "storefront/includes/product_card.html" with product=related %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
