@@ -58,26 +58,22 @@ const Products = () => {
   return (
     <section id="products" className="py-5 bg-light">
       <div className="container">
-        {/* Section Header */}
         <div className="text-center mb-5">
-          <h2 className="display-5 fw-bold mb-3">Featured Products</h2>
+          <h2 className="display-5 fw-bold mb-3">Clothing &amp; Style</h2>
           <p className="lead text-muted">
-            Discover our curated selection of premium tech products and
-            accessories.
+            Find your new everyday favorites, then select Buy Now to view details
+            and add them to your cart.
           </p>
         </div>
 
-        {/* Products Grid */}
         <div className="d-flex flex-wrap justify-content-start gap-4">
           {products?.length > 0 ? (
-            products?.map((product) => (
+            products.map((product) => (
               <div
                 key={product?.id}
                 className="product-card bg-white shadow-sm mb-4"
-                // Added inline style for consistent width if not handled in CSS
                 style={{ width: "18rem" }}
               >
-                {/* Image */}
                 <div className="product-image-wrapper overflow-hidden">
                   <img
                     src={product?.image}
@@ -87,7 +83,6 @@ const Products = () => {
                   />
                 </div>
 
-                {/* Content */}
                 <div className="p-3 d-flex flex-column flex-grow-1">
                   <h5
                     className="fw-bold mb-2 text-truncate"
@@ -96,9 +91,8 @@ const Products = () => {
                     {product?.name}
                   </h5>
                   <p className="text-muted flex-grow-1 mb-3">
-                    {/* Safe check for description length */}
                     {product?.description
-                      ? `${product?.description.substring(0, 80)}...`
+                      ? `${product.description.substring(0, 80)}${product.description.length > 80 ? "..." : ""}`
                       : "No description available"}
                   </p>
 
@@ -107,26 +101,21 @@ const Products = () => {
                       ${product?.price}
                     </span>
                     <small
-                      className={`fw-semibold ${
-                        product?.stock > 0 ? "text-success" : "text-danger"
-                      }`}
+                      className={`fw-semibold ${product?.stock > 0 ? "text-success" : "text-danger"}`}
                     >
                       {product?.stock > 0
-                        ? `${product?.stock} in stock`
+                        ? `${product.stock} in stock`
                         : "Out of stock"}
                     </small>
                   </div>
 
                   <Link
                     to={`/product/${product?.id}`}
-                    className={`btn btn-primary rounded-pill w-100 ${
-                      product?.stock === 0 ? "disabled" : ""
-                    }`}
-                    // Use aria-disabled for accessibility on disabled links
+                    className={`btn btn-primary rounded-pill w-100 ${product?.stock === 0 ? "disabled" : ""}`}
                     aria-disabled={product?.stock === 0}
                     tabIndex={product?.stock === 0 ? -1 : undefined}
                   >
-                    View Details
+                    Buy Now
                   </Link>
                 </div>
               </div>
