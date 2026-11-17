@@ -17,16 +17,14 @@ def clean_catalog_and_apply_discounts(apps, schema_editor):
     ).delete()
     Category.objects.using(database).filter(name__in=CLOTHING_CATEGORIES).delete()
 
-    # Alternate 20% and 30% discounts across the remaining catalog in a stable
-    # order so the assignment is predictable whenever this migration runs.
+    # Apply a fixed 20% discount to all remaining catalog items.
     products = Product.objects.using(database).order_by("name", "pk")
-    for index, product in enumerate(products.iterator()):
-        mrp = product.mrp or product.price
-        discount_percent = 20 if index % 2 == 0 else 30
-        discounted_price = (mrp * Decimal(100 - discount_percent) / Decimal(100)).quantize(
+    for product in products.iterator():
+        base_price = product.mrp or product.price
+        discounted_price = (base_price * Decimal("0.80")).quantize(
             Decimal("0.01"), rounding=ROUND_HALF_UP
         )
-        product.mrp = mrp
+        product.mrp = base_price
         product.price = discounted_price
         product.save(using=database, update_fields=["mrp", "price"])
 
