@@ -75,19 +75,23 @@ const Header = () => {
           <ul className="navbar-nav ms-auto align-items-center">
             <li className="nav-item">
               <Link
-                className={`nav-link ${
-                  isActive("/") ? "text-primary fw-semibold" : ""
-                }`}
+                className={`nav-link ${isActive("/") ? "text-primary fw-semibold" : ""}`}
                 to="/"
               >
                 Home
               </Link>
             </li>
+            <li className="nav-item">
+              <Link
+                className={`nav-link ${isActive("/ats-score") ? "text-primary fw-semibold" : ""}`}
+                to="/ats-score"
+              >
+                ATS Score Finder
+              </Link>
+            </li>
             <li className="nav-item position-relative">
               <Link
-                className={`nav-link mx-2 ${
-                  isActive("/cart") ? "text-primary fw-semibold" : ""
-                }`}
+                className={`nav-link mx-2 ${isActive("/cart") ? "text-primary fw-semibold" : ""}`}
                 to="/cart"
               >
                 <i className="bi bi-cart3"></i> Cart
@@ -124,14 +128,7 @@ const Header = () => {
                       Dashboard
                     </Link>
                   </li>
-                  {/* <li>
-                    <Link className="dropdown-item" to="/profile">
-                      Profile Settings
-                    </Link>
-                  </li> */}
-                  <li>
-                    <hr className="dropdown-divider" />
-                  </li>
+                  <li><hr className="dropdown-divider" /></li>
                   <li>
                     <button className="dropdown-item" onClick={handleLogout}>
                       <LogOut size={16} className="me-2" />
